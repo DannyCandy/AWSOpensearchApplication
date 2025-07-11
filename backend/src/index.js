@@ -10,13 +10,17 @@ import { createServer } from "http";
 dotenv.config();
 const PORT = process.env.PORT;
 const MONGO_CONNECT_URL = process.env.MONGO_CONNECT_URL;
+const OPSURLCLIENT = process.env.OPSURLCLIENT;
+const PWDOPS = process.env.PWDOPS;
+const USERNAMOPS = process.env.USERNAMOPS;
+
 
 // OpenSearch connection
 const opensearchClient = new Client({
-  node: 'https://search-dannydomain-vjfwlnkm6cgdknezpklqyruypi.ap-southeast-1.es.amazonaws.com',
+  node: OPSURLCLIENT,
   auth: {
-    username: 'dannycandy',
-    password: 'dankb273V@'
+    username: USERNAMOPS,
+    password: PWDOPS
   }
 });
 
@@ -24,17 +28,7 @@ const app = express();
 const httpServer = createServer(app);
 app.use(
 	cors({
-		origin: (origin, callback) => {
-			// Allow requests with no origin (mobile apps, etc.)
-			if (!origin) return callback(null, true);
-			
-			// Allow localhost and any IP on port 3000
-			if (origin.includes('localhost:3000') || origin.includes(':3000')) {
-				return callback(null, true);
-			}
-			
-			callback(new Error('Not allowed by CORS'));
-		},
+		origin: process.env.FRONTEND_URL || "http://localhost:3000",
 		credentials: true,
 	})
 );
