@@ -31,7 +31,8 @@ import useSearchFilter from "@/lib/hooks/useSearchFilter"
 import { useDebounce } from "@/lib/hooks/useDebounce"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import type { Movie } from "@/types"
-import MovieSkeleton from "@/components/skeleton/SearchPage"
+// import MovieSkeleton from "@/components/skeleton/SearchPage"
+import { MovieListSkeleton } from "@/components/skeleton/MovieList"
 
 
 const sortOptions = [
@@ -70,7 +71,7 @@ function SearchPage() {
     page: 1,
     filter: "",
   });
-  const { data, isLoading, isError, isPlaceholderData, error, refetch, isFetching } = useSearchFilter<Movie>( query, "/search/movies");
+  const { data, isLoading, isError, isPlaceholderData, error, refetch, isFetching } = useSearchFilter<Movie>( query, "/movies");
   const debouncedSearch = useDebounce(searchQuery, 700);
   useEffect(() => {
     const filtered = debouncedSearch.trim().replace(/\s+/g, " ");
@@ -121,11 +122,11 @@ function SearchPage() {
     await refetch();
   }, [refetch]);
 
-  if (isLoading || isFetching) {
-    return (
-      <MovieSkeleton />
-    )
-  }
+  // if (isLoading || isFetching) {
+  //   return (
+  //     <MovieSkeleton />
+  //   )
+  // }
 
   if (isError) {
     return (
@@ -239,226 +240,230 @@ function SearchPage() {
             </div>
           </div>
         </div>
+        {(isLoading || isFetching) ? 
+          <MovieListSkeleton /> 
+            :
+          <>
+            <div className="flex items-center justify-between mb-10">
+              {/* Left: Results Count */}
+              <div>
+                <p className="text-red-700 dark:text-red-300 text-lg">
+                  Showing{" "}
+                  <span className="font-semibold text-red-800 dark:text-red-200">
+                    {data?.docs.length}
+                  </span>{" "}
+                  in <span className="font-semibold text-red-800 dark:text-red-200">{data?.totalDocs}</span> matched movies
+                </p>
+                <div className="flex items-center gap-2 mt-2">
+                  {searchQuery && (
+                    <span className="px-2 py-1 bg-emerald-500/20 text-emerald-400 rounded text-xs">
+                      Search: "{searchQuery}"
+                    </span>
+                  )}
+                  {sort && (<span className="px-2 py-1 bg-orange-500 text-gray-800 rounded text-xs">Sort: {sort}</span>)}
+                  {filter && (<span className="px-2 py-1 bg-blue-500/20 text-blue-400 rounded text-xs">Filter: {filter}</span>)}
+                </div>
+              </div>
 
-        {/* Results Header with Pagination Info */}
-        <div className="flex items-center justify-between mb-10">
-          {/* Left: Results Count */}
-          <div>
-            <p className="text-red-700 dark:text-red-300 text-lg">
-              Showing{" "}
-              <span className="font-semibold text-red-800 dark:text-red-200">
-                {data?.docs.length}
-              </span>{" "}
-              in <span className="font-semibold text-red-800 dark:text-red-200">{data?.totalDocs}</span> matched movies
-            </p>
-            <div className="flex items-center gap-2 mt-2">
-              {searchQuery && (
-                <span className="px-2 py-1 bg-emerald-500/20 text-emerald-400 rounded text-xs">
-                  Search: "{searchQuery}"
-                </span>
-              )}
-              {sort && (<span className="px-2 py-1 bg-orange-500 text-gray-800 rounded text-xs">Sort: {sort}</span>)}
-              {filter && (<span className="px-2 py-1 bg-blue-500/20 text-blue-400 rounded text-xs">Filter: {filter}</span>)}
+              {/* Right: Page Info */}
+              <div>
+                <p className="text-red-700 dark:text-red-300 text-lg">
+                  Page <span className="font-semibold text-red-800 dark:text-red-200">{data?.page}</span> of{" "}
+                  <span className="font-semibold text-red-800 dark:text-red-200">10</span>
+                </p>
+              </div>
             </div>
-          </div>
+          
+            <div className="w-full">
+              <div className="space-y-4 mb-8">
+                {data?.docs.map((result) => (
+                  <Card
+                    key={result._id}
+                    className="group hover:shadow-2xl transition-all duration-300 cursor-pointer border-red-200 dark:border-red-700 hover:border-yellow-400 dark:hover:border-yellow-500 bg-white/90 dark:bg-slate-800/90 overflow-hidden backdrop-blur-sm"
+                  >
+                    <CardContent className="p-8">
+                      <div className="flex items-start gap-6">
+                        {/* Artist Avatar */}
+                        {/* <div className="flex-shrink-0">
+                          <div className="w-16 h-16 bg-gradient-to-br from-red-500 to-yellow-500 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-lg">
+                            {result.}
+                          </div>
+                        </div> */}
 
-          {/* Right: Page Info */}
-          <div>
-            <p className="text-red-700 dark:text-red-300 text-lg">
-              Page <span className="font-semibold text-red-800 dark:text-red-200">{data?.page}</span> of{" "}
-              <span className="font-semibold text-red-800 dark:text-red-200">10</span>
-            </p>
-          </div>
-        </div>
+                        {/* Main Content */}
+                        <div className="flex-1 min-w-0">
+                          {/* Header */}
+                          <div className="flex items-start justify-between mb-4">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-3 mb-2">
+                                <h3 className="text-2xl font-bold text-red-800 dark:text-red-200 group-hover:text-yellow-600 dark:group-hover:text-yellow-400 transition-colors">
+                                  {/* {result.title} */}
+                                  {result.hasHighlightedTitle 
+                                    ? <span dangerouslySetInnerHTML={{__html: result.highlightedFields.title}} />
+                                    : result.title
+                                  }
+                                </h3>
+                                <Badge className="bg-gradient-to-r from-yellow-400 to-red-500 text-white border-0 shadow-md">
+                                  <Star className="h-3 w-3 mr-1 fill-current" />
+                                  {result.rated}
+                                </Badge>
+                                <div className="text-right ml-auto">
+                                  <div className="flex items-center gap-1 text-yellow-600 dark:text-yellow-400 mb-1">
+                                    <List className="h-5 w-5" />
+                                    <span className="text-xl font-bold">{result.genres.join(', ')}</span>
+                                  </div>
+                                </div>
+                              </div>
 
-        {/* Search Results - Vietnamese Folk Songs */}
-        <div className="w-full">
-          <div className="space-y-4 mb-8">
-            {data?.docs.map((result) => (
-              <Card
-                key={result._id}
-                className="group hover:shadow-2xl transition-all duration-300 cursor-pointer border-red-200 dark:border-red-700 hover:border-yellow-400 dark:hover:border-yellow-500 bg-white/90 dark:bg-slate-800/90 overflow-hidden backdrop-blur-sm"
-              >
-                <CardContent className="p-8">
-                  <div className="flex items-start gap-6">
-                    {/* Artist Avatar */}
-                    {/* <div className="flex-shrink-0">
-                      <div className="w-16 h-16 bg-gradient-to-br from-red-500 to-yellow-500 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-lg">
-                        {result.}
-                      </div>
-                    </div> */}
+                              <div className="flex items-center gap-6 text-red-600 dark:text-red-400 mb-3">
+                                <div className="flex items-center gap-2">
+                                  <Clapperboard className="h-5 w-5 text-red-500" />
+                                  <span className="font-semibold text-red-800 dark:text-red-200">
+                                    {result.directors.join(', ')}
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <ContactRound className="h-5 w-5 text-red-500" />
+                                  <span className="font-semibold text-red-800 dark:text-red-200">
+                                    {result.cast.join(', ')}
+                                  </span>
+                                </div>
+                                {/* <div className="flex items-center gap-2">
+                                  <MapPin className="h-5 w-5 text-yellow-500" />
+                                  <span>{result.region}</span>
+                                </div> */}
+                                <div className="flex items-center gap-2">
+                                  <Clock className="h-5 w-5 text-red-500" />
+                                  <span>{result.runtime}</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <Calendar className="h-5 w-5 text-yellow-500" />
+                                  <span>{result.year}</span>
+                                </div>
+                              </div>
 
-                    {/* Main Content */}
-                    <div className="flex-1 min-w-0">
-                      {/* Header */}
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-3 mb-2">
-                            <h3 className="text-2xl font-bold text-red-800 dark:text-red-200 group-hover:text-yellow-600 dark:group-hover:text-yellow-400 transition-colors">
-                              {/* {result.title} */}
-                              {result.hasHighlightedTitle 
-                                ? <span dangerouslySetInnerHTML={{__html: result.highlightedFields.title}} />
-                                : result.title
-                              }
-                            </h3>
-                            <Badge className="bg-gradient-to-r from-yellow-400 to-red-500 text-white border-0 shadow-md">
-                              <Star className="h-3 w-3 mr-1 fill-current" />
-                              {result.rated}
-                            </Badge>
-                            <div className="text-right ml-auto">
-                              <div className="flex items-center gap-1 text-yellow-600 dark:text-yellow-400 mb-1">
-                                <List className="h-5 w-5" />
-                                <span className="text-xl font-bold">{result.genres.join(', ')}</span>
+                              <p className="text-red-700 dark:text-red-300 text-sm leading-relaxed mb-4">
+                                {/* {result.plot} */}
+                                {result.hasHighlightedPlot
+                                  ? <span dangerouslySetInnerHTML={{__html: result.highlightedFields.plot}} />
+                                  : result.plot
+                                }
+                              </p>
+                              <p className="text-red-700 dark:text-red-300 text-sm leading-relaxed mb-4">
+                                {/* {result.fullplot} */}
+                                {result.hasHighlightedFullplot
+                                  ? <span dangerouslySetInnerHTML={{__html: result.highlightedFields.fullplot}} />
+                                  : result.fullplot
+                                }
+                              </p>
+
+                              {/* Tags */}
+                              <div className="flex items-center gap-2 mb-4">
+                                {result.countries.map((tag) => (
+                                  <Badge
+                                    key={tag}
+                                    variant="secondary"
+                                    className="bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 hover:bg-yellow-100 dark:hover:bg-yellow-900 transition-colors"
+                                  >
+                                    {tag}
+                                  </Badge>
+                                ))}
+                              </div>
+
+                              {/* Stats */}
+                              <div className="flex items-center gap-6 text-sm text-red-500">
+                                <div className="flex items-center gap-1">
+                                  <Eye className="h-4 w-4" />
+                                  <span>{result.tomatoes?.viewer ? result.tomatoes.viewer.numReviews : 0} lượt xem</span>
+                                </div>
+                                <div className="flex items-center gap-1">
+                                  <Users className="h-4 w-4" />
+                                  <span>{result.imdb.votes} đánh giá</span>
+                                </div>
+                                <div className="flex items-center gap-1">
+                                  <Award className="h-4 w-4" />
+                                  <span>Rating: {result.imdb.rating}</span>
+                                </div>
+                                <div className="flex items-center gap-1 ml-auto">
+                                  <Button className="bg-gradient-to-r from-red-600 to-yellow-600 hover:from-red-700 hover:to-yellow-700 text-white shadow-lg group-hover:shadow-xl transition-all duration-300">
+                                    Watch
+                                    <ArrowUpRight className="h-4 w-4 ml-2 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+                                  </Button>
+                                </div>
+                                
                               </div>
                             </div>
-                          </div>
 
-                          <div className="flex items-center gap-6 text-red-600 dark:text-red-400 mb-3">
-                            <div className="flex items-center gap-2">
-                              <Clapperboard className="h-5 w-5 text-red-500" />
-                              <span className="font-semibold text-red-800 dark:text-red-200">
-                                {result.directors.join(', ')}
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <ContactRound className="h-5 w-5 text-red-500" />
-                              <span className="font-semibold text-red-800 dark:text-red-200">
-                                {result.cast.join(', ')}
-                              </span>
-                            </div>
-                            {/* <div className="flex items-center gap-2">
-                              <MapPin className="h-5 w-5 text-yellow-500" />
-                              <span>{result.region}</span>
-                            </div> */}
-                            <div className="flex items-center gap-2">
-                              <Clock className="h-5 w-5 text-red-500" />
-                              <span>{result.runtime}</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <Calendar className="h-5 w-5 text-yellow-500" />
-                              <span>{result.year}</span>
-                            </div>
-                          </div>
+                            {/* Right Section */}
+                            {/* <div className="flex flex-col items-end gap-4">
+                              <div className="text-right inline">
+                                <div className="flex items-center gap-1 text-yellow-600 dark:text-yellow-400 mb-1">
+                                  <List className="h-5 w-5" />
+                                  <span className="text-xl font-bold">{result.genres.join(', ')}</span>
+                                </div>
+                              </div>
 
-                          <p className="text-red-700 dark:text-red-300 text-sm leading-relaxed mb-4">
-                            {/* {result.plot} */}
-                            {result.hasHighlightedPlot
-                              ? <span dangerouslySetInnerHTML={{__html: result.highlightedFields.plot}} />
-                              : result.plot
-                            }
-                          </p>
-                          <p className="text-red-700 dark:text-red-300 text-sm leading-relaxed mb-4">
-                            {/* {result.fullplot} */}
-                            {result.hasHighlightedFullplot
-                              ? <span dangerouslySetInnerHTML={{__html: result.highlightedFields.fullplot}} />
-                              : result.fullplot
-                            }
-                          </p>
-
-                          {/* Tags */}
-                          <div className="flex items-center gap-2 mb-4">
-                            {result.countries.map((tag) => (
                               <Badge
-                                key={tag}
-                                variant="secondary"
-                                className="bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 hover:bg-yellow-100 dark:hover:bg-yellow-900 transition-colors"
+                                variant="outline"
+                                className="border-yellow-200 text-yellow-700 dark:border-yellow-700 dark:text-yellow-300 bg-yellow-50 dark:bg-yellow-900/20"
                               >
-                                {tag}
+                                {result.difficulty}
                               </Badge>
-                            ))}
-                          </div>
-
-                          {/* Stats */}
-                          <div className="flex items-center gap-6 text-sm text-red-500">
-                            <div className="flex items-center gap-1">
-                              <Eye className="h-4 w-4" />
-                              <span>{result.tomatoes?.viewer ? result.tomatoes.viewer.numReviews : 0} lượt xem</span>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <Users className="h-4 w-4" />
-                              <span>{result.imdb.votes} đánh giá</span>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <Award className="h-4 w-4" />
-                              <span>Rating: {result.imdb.rating}</span>
-                            </div>
-                            <div className="flex items-center gap-1 ml-auto">
                               <Button className="bg-gradient-to-r from-red-600 to-yellow-600 hover:from-red-700 hover:to-yellow-700 text-white shadow-lg group-hover:shadow-xl transition-all duration-300">
                                 Watch
                                 <ArrowUpRight className="h-4 w-4 ml-2 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
                               </Button>
-                            </div>
-                            
+                            </div> */}
                           </div>
                         </div>
-
-                        {/* Right Section */}
-                        {/* <div className="flex flex-col items-end gap-4">
-                          <div className="text-right inline">
-                            <div className="flex items-center gap-1 text-yellow-600 dark:text-yellow-400 mb-1">
-                              <List className="h-5 w-5" />
-                              <span className="text-xl font-bold">{result.genres.join(', ')}</span>
-                            </div>
-                          </div>
-
-                          <Badge
-                            variant="outline"
-                            className="border-yellow-200 text-yellow-700 dark:border-yellow-700 dark:text-yellow-300 bg-yellow-50 dark:bg-yellow-900/20"
-                          >
-                            {result.difficulty}
-                          </Badge>
-                          <Button className="bg-gradient-to-r from-red-600 to-yellow-600 hover:from-red-700 hover:to-yellow-700 text-white shadow-lg group-hover:shadow-xl transition-all duration-300">
-                            Watch
-                            <ArrowUpRight className="h-4 w-4 ml-2 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
-                          </Button>
-                        </div> */}
                       </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex items-center justify-center gap-3">
+              <Button
+                variant="outline"
+                size="lg"
+                onClick={() => goToPage(query.page - 1)}
+                disabled={isPlaceholderData || !data?.hasPrevPage}
+                className="h-12 w-12 p-0 rounded-xl border-2 border-red-200 hover:border-yellow-400 disabled:opacity-50 bg-white/80 backdrop-blur-sm"
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </Button>
+
+              {pageRange.map((pageNum) => (
+                <Button
+                  key={pageNum}
+                  variant={query.page === pageNum ? "default" : "outline"}
+                  size="lg"
+                  onClick={() => goToPage(pageNum)}
+                  className={`h-12 w-12 p-0 rounded-xl border-2 transition-all duration-200 backdrop-blur-sm ${
+                    query.page === pageNum
+                      ? "bg-gradient-to-r from-red-600 to-yellow-600 text-white shadow-lg border-transparent"
+                      : "border-red-200 hover:border-yellow-400 bg-white/80"
+                  }`}
+                >
+                  {pageNum}
+                </Button>
+              ))}
+
+              <Button
+                variant="outline"
+                size="lg"
+                onClick={() => goToPage(query.page + 1)}
+                disabled={isPlaceholderData || !data?.hasNextPage}
+                className="h-12 w-12 p-0 rounded-xl border-2 border-red-200 hover:border-yellow-400 disabled:opacity-50 bg-white/80 backdrop-blur-sm"
+              >
+                <ChevronRight className="h-5 w-5" />
+              </Button>
+            </div>
+          </>
+        }
         
-        {/* Enhanced Pagination */}
-        <div className="flex items-center justify-center gap-3">
-          <Button
-            variant="outline"
-            size="lg"
-            onClick={() => goToPage(query.page - 1)}
-            disabled={isPlaceholderData || !data?.hasPrevPage}
-            className="h-12 w-12 p-0 rounded-xl border-2 border-red-200 hover:border-yellow-400 disabled:opacity-50 bg-white/80 backdrop-blur-sm"
-          >
-            <ChevronLeft className="h-5 w-5" />
-          </Button>
-
-          {pageRange.map((pageNum) => (
-            <Button
-              key={pageNum}
-              variant={query.page === pageNum ? "default" : "outline"}
-              size="lg"
-              onClick={() => goToPage(pageNum)}
-              className={`h-12 w-12 p-0 rounded-xl border-2 transition-all duration-200 backdrop-blur-sm ${
-                query.page === pageNum
-                  ? "bg-gradient-to-r from-red-600 to-yellow-600 text-white shadow-lg border-transparent"
-                  : "border-red-200 hover:border-yellow-400 bg-white/80"
-              }`}
-            >
-              {pageNum}
-            </Button>
-          ))}
-
-          <Button
-            variant="outline"
-            size="lg"
-            onClick={() => goToPage(query.page + 1)}
-            disabled={isPlaceholderData || !data?.hasNextPage}
-            className="h-12 w-12 p-0 rounded-xl border-2 border-red-200 hover:border-yellow-400 disabled:opacity-50 bg-white/80 backdrop-blur-sm"
-          >
-            <ChevronRight className="h-5 w-5" />
-          </Button>
-        </div>
+        
       </div>
     </div>
   )

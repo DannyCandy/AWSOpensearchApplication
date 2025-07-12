@@ -1,13 +1,13 @@
 import { MongoClient } from 'mongodb';
 import { Client } from '@opensearch-project/opensearch';
 import express from 'express';
-import dotenv from "dotenv";
 import cors from "cors";
 import { calculatePopularityScore} from "./lib/helper.js";
 import searchRoutes from './routes/search.js';
-import { createServer } from "http";
+// import { createServer } from "http";
+import serverless from 'serverless-http';
 
-dotenv.config();
+// dotenv.config();
 const PORT = process.env.PORT;
 const MONGO_CONNECT_URL = process.env.MONGO_CONNECT_URL;
 const OPSURLCLIENT = process.env.OPSURLCLIENT;
@@ -25,10 +25,11 @@ const opensearchClient = new Client({
 });
 
 const app = express();
-const httpServer = createServer(app);
+// const httpServer = createServer(app);
 app.use(
 	cors({
-		origin: process.env.FRONTEND_URL || "http://localhost:3000",
+		// origin: process.env.FRONTEND_URL || "http://localhost:3000",
+		origin: "*",
 		credentials: true,
 	})
 );
@@ -41,10 +42,12 @@ app.use((req, res, next) => {
 });
 
 // Routes
-app.use('/api/search', searchRoutes);
-httpServer.listen(PORT, () => {
-	console.log("Server is running on port " + PORT);
-});
+// app.use('/api/search', searchRoutes);
+app.use(searchRoutes);
+export const handler = serverless(app);
+// httpServer.listen(PORT, () => {
+// 	console.log("Server is running on port " + PORT);
+// });
 
 
 // OPTIMIZED INDEX CONFIGURATION FOR 40K MOVIES

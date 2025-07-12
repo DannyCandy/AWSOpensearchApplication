@@ -1,6 +1,6 @@
 import { CloudWatchLogsClient, PutLogEventsCommand, CreateLogGroupCommand, CreateLogStreamCommand, DescribeLogGroupsCommand, DescribeLogStreamsCommand } from '@aws-sdk/client-cloudwatch-logs';
-import dotenv from "dotenv";
-dotenv.config()
+// import dotenv from "dotenv";
+// dotenv.config()
 
 const client = new CloudWatchLogsClient({
   region: process.env.AWS_REGION || 'ap-southeast-1',
