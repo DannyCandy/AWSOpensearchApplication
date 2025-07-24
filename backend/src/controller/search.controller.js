@@ -117,14 +117,16 @@ export const searchWithQuery = async (req, res) => {
     
     const responseTime = Date.now() - startTime;
     
-    // Log to CloudWatch
+    // Log successful request to CloudWatch
     await logSearchEvent({
       q,
       filter,
       sortBy,
       order,
       resultsCount: response.body.hits.total.value,
-      responseTime
+      responseTime,
+      statusCode: 200,
+      success: true
     });
     
     res.json({
@@ -139,7 +141,24 @@ export const searchWithQuery = async (req, res) => {
     });
 
   } catch (error) {
+    const responseTime = Date.now() - startTime;
+    
     console.error('Search error:', error);
+    
+    // Log error to CloudWatch
+    await logSearchEvent({
+      q,
+      filter,
+      sortBy,
+      order,
+      resultsCount: 0,
+      responseTime,
+      statusCode: 500,
+      success: false,
+      errorMessage: error.message,
+      errorType: error.name || 'UnknownError'
+    });
+    
     res.status(500).json({ error: 'Search failed' });
   }
 }

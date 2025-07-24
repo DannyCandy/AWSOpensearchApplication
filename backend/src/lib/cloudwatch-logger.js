@@ -67,13 +67,19 @@ export async function logSearchEvent(data) {
     const logEvent = {
       timestamp: Date.now(),
       message: JSON.stringify({
+        eventType: data.success ? 'SEARCH_SUCCESS' : 'SEARCH_ERROR',
         searchQuery: data.q || '',
         filter: data.filter || '',
         sortBy: data.sortBy || '',
         sortOrder: data.order || '',
         resultsCount: data.resultsCount || 0,
         responseTime: data.responseTime || 0,
-        timestamp: new Date().toISOString()
+        statusCode: data.statusCode || 200,
+        success: data.success !== false,
+        errorMessage: data.errorMessage || null,
+        errorType: data.errorType || null,
+        timestamp: new Date().toISOString(),
+        severity: data.statusCode >= 500 ? 'ERROR' : data.statusCode >= 400 ? 'WARN' : 'INFO'
       })
     };
 
