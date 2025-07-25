@@ -4,10 +4,6 @@ import { CloudWatchLogsClient, PutLogEventsCommand, CreateLogGroupCommand, Creat
 
 const client = new CloudWatchLogsClient({
   region: process.env.AWS_REGION || 'ap-southeast-1',
-  credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
-  }
 });
 
 const LOG_GROUP = '/movie-search/analytics';
